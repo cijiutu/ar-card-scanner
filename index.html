@@ -9,27 +9,20 @@
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
 
   <style>
-    html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
-    #loading{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
-    #loading.hidden{opacity:0;pointer-events:none}
-    .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    #loading .status{font-size:15px;margin:0 0 4px}
-    #loading .sub{font-size:12px;opacity:.5;margin:0;max-width:260px;text-align:center;line-height:1.5}
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
 
-    /* 权限引导弹窗 */
-    #permGuide{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px}
-    #permGuide.show{display:flex}
-    #permGuide h3{font-size:20px;margin:0 0 8px}
-    #permGuide p{font-size:14px;opacity:.7;margin:4px 0;max-width:280px;line-height:1.6}
-    #permGuide .btn{display:inline-block;margin-top:20px;padding:12px 32px;background:#4ade80;color:#000;border:none;border-radius:24px;font-size:16px;font-weight:600;cursor:pointer}
+    /* A-Frame 场景必须撑满 */
+    a-scene{display:block;width:100%!important;height:100%!important;position:fixed;top:0;left:0}
+
+    .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
 
     .ui-overlay{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
-    .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:28px;font-size:15px;letter-spacing:.5px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.35)}
+    .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:28px;font-size:15px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.35)}
 
     .bottom-bar{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;align-items:center;gap:10px}
     .upload-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;border:1.5px solid rgba(255,255,255,.35);padding:10px 20px;border-radius:24px;font-size:14px;cursor:pointer;transition:all .25s}
-    .upload-btn:hover{background:rgba(255,255,255,.25)}
     .upload-btn.uploaded{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.5);color:#4ade80}
     .upload-btn .icon{font-size:18px}
     #fileInput{display:none}
@@ -40,29 +33,12 @@
 </head>
 <body>
 
-  <!-- 加载 -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <p class="status">正在启动 AR 引擎...</p>
-    <p class="sub">首次加载约 3-5 秒</p>
-  </div>
-
-  <!-- 权限引导 -->
-  <div id="permGuide">
-    <h3>📷 需要摄像头权限</h3>
-    <p>浏览器会弹出权限请求，请点击<strong>"允许"</strong></p>
-    <p>如误点了"拒绝"，请在浏览器设置中允许摄像头权限后刷新页面</p>
-    <button class="btn" onclick="location.reload()">🔄 已设置，刷新页面</button>
-  </div>
-
-  <!-- 顶部提示 -->
   <div class="ui-overlay">
     <div class="ui-card" id="uiHint">
       <span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>
     </div>
   </div>
 
-  <!-- 底部工具栏 -->
   <div class="bottom-bar">
     <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">
       <span class="icon">🖼️</span> 上传 OC 立绘
@@ -75,96 +51,51 @@
     </div>
   </div>
 
-  <!-- ==================== A-Frame 场景 ==================== -->
   <a-scene
-    embedded
     arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     renderer="logarithmicDepthBuffer: true;"
     vr-mode-ui="enabled: false">
 
-    <!-- Hiro 标记 -->
     <a-marker preset="hiro">
-
       <!-- 底座阴影 -->
       <a-plane position="0 0.005 0" rotation="-90 0 0" width="0.7" height="0.25"
                material="color: #000; opacity: 0.3; side: double;"></a-plane>
-
-      <!-- 卡片背面（深色，略后移） -->
+      <!-- 卡片背面 -->
       <a-plane position="0 0.4 -0.015" width="0.6" height="0.85"
                material="color: #1a1a2e; side: double;"></a-plane>
-
-      <!-- 卡片主体（用户图片） -->
+      <!-- 卡片主体 -->
       <a-plane id="cardImage" position="0 0.4 0" width="0.6" height="0.85"
                material="src: https://picsum.photos/id/237/400/566; side: double;"></a-plane>
-
       <!-- 金色边框 -->
       <a-plane position="0 0.4 0.005" width="0.62" height="0.87"
                material="color: #c9a96e; opacity: 0.4; side: double;"></a-plane>
-
-      <!-- 底座横条 -->
+      <!-- 底座 -->
       <a-box position="0 0.03 0.12" width="0.56" height="0.06" depth="0.04"
              material="color: #c9a96e;"></a-box>
-
     </a-marker>
 
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
-    var loadingEl = document.getElementById("loading");
-    var permGuide = document.getElementById("permGuide");
-
-    // 检测摄像头权限
-    function checkCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        permGuide.querySelector("p").innerHTML = "您的浏览器不支持摄像头。<br>请使用 <strong>Chrome</strong> 或 <strong>Safari</strong> 打开";
-        permGuide.classList.add("show");
-        loadingEl.classList.add("hidden");
-        return;
-      }
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(function(stream) {
-          stream.getTracks().forEach(function(t) { t.stop(); });
-          permGuide.classList.remove("show");
-        })
-        .catch(function(err) {
-          loadingEl.classList.add("hidden");
-          if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-            permGuide.querySelector("p").innerHTML = "摄像头权限被拒绝。<br>请在浏览器设置中允许摄像头，然后刷新页面";
-          } else if (err.name === "NotFoundError") {
-            permGuide.querySelector("p").innerHTML = "未检测到摄像头。<br>请确认设备有后置摄像头";
-          } else {
-            permGuide.querySelector("p").innerHTML = "摄像头访问失败：" + err.message + "<br>请检查权限设置";
-          }
-          permGuide.classList.add("show");
-        });
-    }
-
-    // 先检测权限再加载场景
-    checkCamera();
-
+    var hintEl = document.getElementById("uiHint");
     var sceneEl = document.querySelector("a-scene");
-    if (sceneEl) {
-      sceneEl.addEventListener("loaded", function() {
-        setTimeout(function() {
-          loadingEl.classList.add("hidden");
-          setTimeout(function() { loadingEl.style.display = "none"; }, 600);
-        }, 500);
-        bindMarker();
-      });
-    }
 
-    // 超时隐藏 loading
-    setTimeout(function() {
-      if (!loadingEl.classList.contains("hidden") && !permGuide.classList.contains("show")) {
-        loadingEl.classList.add("hidden");
-        setTimeout(function() { loadingEl.style.display = "none"; }, 600);
+    sceneEl.addEventListener("loaded", function() {
+      var m = document.querySelector("a-marker");
+      if (m) {
+        m.addEventListener("markerFound", function() {
+          hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
+          hintEl.style.color = "#4ade80";
+        });
+        m.addEventListener("markerLost", function() {
+          hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
+          hintEl.style.color = "#fff";
+        });
       }
-    }, 10000);
-  </script>
+    });
 
-  <!-- 图片上传 -->
-  <script>
+    // 图片上传
     var fileInput = document.getElementById("fileInput");
     var uploadBtn = document.getElementById("uploadBtn");
     var cardImage = document.getElementById("cardImage");
@@ -172,30 +103,13 @@
     fileInput.addEventListener("change", function(e) {
       var file = e.target.files[0];
       if (!file) return;
-      if (!file.type.startsWith("image/")) { alert("请选择图片文件（JPG / PNG / WebP）"); return; }
+      if (!file.type.startsWith("image/")) { alert("请选择图片文件"); return; }
       if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
       currentBlobUrl = URL.createObjectURL(file);
       cardImage.setAttribute("material", "src: " + currentBlobUrl + "; side: double;");
       uploadBtn.classList.add("uploaded");
       uploadBtn.innerHTML = '<span class="icon">✅</span> 已上传立绘（点击更换）';
     });
-  </script>
-
-  <!-- 标记事件 -->
-  <script>
-    var hintEl = document.getElementById("uiHint");
-    function bindMarker() {
-      var m = document.querySelector("a-marker");
-      if (!m) { setTimeout(bindMarker, 500); return; }
-      m.addEventListener("markerFound", function() {
-        hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
-        hintEl.style.color = "#4ade80";
-      });
-      m.addEventListener("markerLost", function() {
-        hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
-        hintEl.style.color = "#fff";
-      });
-    }
   </script>
 
 </body>
