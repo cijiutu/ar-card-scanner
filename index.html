@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
   <title>AR Card</title>
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
   <style>
-    body{margin:0;overflow:hidden;font-family:sans-serif}
+    body{margin:0;overflow:hidden;font-family:sans-serif;background:#000}
     #info{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.7);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;pointer-events:none}
     #btns{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:10px;align-items:center}
     #btns button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer}
@@ -45,6 +44,9 @@
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
+
+  <!-- AR.js 在 A-Frame 之后加载 -->
+  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
 
   <script>
     var info = document.getElementById("info");
