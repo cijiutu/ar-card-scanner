@@ -2,87 +2,32 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
   <title>Web AR — Hiro 标记识别</title>
 
-  <!-- 1. A-Frame 核心 -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <!-- 2. AR.js + A-Frame 适配组件 -->
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-
-    /* ---------- 顶部提示 ---------- */
-    .ui-overlay {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 999;
-      pointer-events: none;
-    }
-
-    .ui-card {
-      background: rgba(0, 0, 0, 0.72);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 28px;
-      font-size: 15px;
-      letter-spacing: 0.5px;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-      transition: opacity 0.4s;
-    }
-
-    .ui-card .emoji {
-      font-size: 22px;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    /* ---------- Hiro 标记预览图 ---------- */
-    .hiro-preview {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 999;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #fff;
-      font-size: 13px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .hiro-preview img {
-      width: 64px;
-      height: 64px;
-      border-radius: 8px;
-      background: #fff;
-      padding: 3px;
-    }
+    html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+    #loading{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
+    #loading.hidden{opacity:0;pointer-events:none}
+    .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #loading .status{font-size:15px;margin:0 0 4px}
+    #loading .sub{font-size:12px;opacity:.5;margin:0}
+    .ui-overlay{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
+    .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:28px;font-size:15px;letter-spacing:.5px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.35)}
+    .ui-card .emoji{font-size:22px;display:block;margin-bottom:2px}
+    .hiro-preview{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;padding:10px 16px;display:flex;align-items:center;gap:12px;color:#fff;font-size:13px;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+    .hiro-preview img{width:64px;height:64px;border-radius:8px;background:#fff;padding:3px}
   </style>
 </head>
 <body>
 
-  <!-- ==================== UI 覆盖层 ==================== -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p class="status">正在加载 AR 引擎...</p>
+    <p class="sub">首次打开可能需要几秒</p>
+  </div>
+
   <div class="ui-overlay">
     <div class="ui-card" id="uiHint">
       <span class="emoji">📷</span>
@@ -90,64 +35,77 @@
     </div>
   </div>
 
-  <!-- Hiro 标记预览（方便用户打印或手机展示） -->
   <div class="hiro-preview">
-    <img src="https://raw.githack.com/nicolocarpignoli/nicolocarpignoli.github.io/master/ar-playground/assets/HIRO.jpg"
-         alt="Hiro 标记" />
-    <span>← 这是 Hiro 标记<br>打印出来或用另一台手机显示</span>
+    <img src="https://cdn.jsdelivr.net/gh/nicolocarpignoli/nicolocarpignoli.github.io@master/ar-playground/assets/HIRO.jpg"
+         alt="Hiro 标记" onerror="this.style.display='none'" />
+    <span>← Hiro 标记<br>打印或另台手机显示</span>
   </div>
 
-  <!-- ==================== A-Frame 场景 ==================== -->
   <a-scene
     embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+    arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    renderer="logarithmicDepthBuffer: true;"
+    vr-mode-ui="enabled: false">
 
-    <!-- ---------- Hiro 预置标记 ---------- -->
     <a-marker preset="hiro">
-
-      <!-- 在标记上显示的图片平面 -->
-      <!-- 宽高比 1:√2 就像一张卡片 -->
-      <a-plane
-        position="0 0 0"
-        rotation="-90 0 0"
-        width="1"
-        height="1.414"
-        material="src: https://picsum.photos/id/237/400/566; side: double;">
-      </a-plane>
-
-      <!-- 可选：薄边框让「卡片感」更强 -->
-      <a-plane
-        position="0 0.002 0"
-        rotation="-90 0 0"
-        width="1.04"
-        height="1.454"
-        material="color: #fff; opacity: 0.18; side: double;">
-      </a-plane>
-
+      <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1.414"
+               material="src: https://picsum.photos/id/237/400/566; side: double;"></a-plane>
     </a-marker>
 
-    <!-- ---------- 摄像机 ---------- -->
     <a-entity camera></a-entity>
   </a-scene>
 
-  <!-- ==================== 检测到/丢失标记时切换提示 ==================== -->
   <script>
-    const hintEl = document.getElementById("uiHint");
-    const sceneEl = document.querySelector("a-scene");
+    var loadingEl = document.getElementById("loading");
+    function hideLoading() { loadingEl.classList.add("hidden"); setTimeout(function(){ loadingEl.style.display="none"; },600); }
+    function showError(m) { loadingEl.innerHTML='<div style="font-size:48px;margin-bottom:12px;">⚠️</div><p class="status">'+m+'</p><p class="sub">请检查网络连接</p><button onclick="location.reload()" style="margin-top:16px;padding:10px 28px;border:1px solid #fff;background:transparent;color:#fff;border-radius:20px;font-size:14px;cursor:pointer;">🔄 重试</button>'; }
+    var scriptsTotal=2, scriptsOk=0;
+    function onScriptOk(){ scriptsOk++; if(scriptsOk>=scriptsTotal) setTimeout(hideLoading,800); }
+  </script>
 
-    sceneEl.addEventListener("loaded", () => {
-      const marker = document.querySelector("a-marker");
+  <!-- A-Frame: 多 CDN 回退 -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"
+          onerror="var s=document.createElement('script');s.src='https://unpkg.com/aframe@1.5.0/dist/aframe.min.js';s.onload=onScriptOk;s.onerror=function(){showError('A-Frame 加载失败')};document.head.appendChild(s)"
+          onload="onScriptOk()"></script>
 
-      marker.addEventListener("markerFound", () => {
+  <!-- AR.js: 多 CDN 回退 -->
+  <script>
+    (function loadArjs(urls, idx) {
+      if (idx >= urls.length) { showError("AR.js 加载失败，请检查网络"); return; }
+      var s = document.createElement("script");
+      s.src = urls[idx];
+      s.onload = onScriptOk;
+      s.onerror = function() { loadArjs(urls, idx + 1); };
+      document.head.appendChild(s);
+    })([
+      "https://cdn.jsdelivr.net/npm/ar.js@2.2.2/aframe/build/aframe-ar.js",
+      "https://unpkg.com/ar.js@2.2.2/aframe/build/aframe-ar.js",
+      "https://rawcdn.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"
+    ], 0);
+  </script>
+
+  <!-- 8秒兜底隐藏loading -->
+  <script>setTimeout(function(){ if(typeof AFRAME!=="undefined") hideLoading(); }, 8000);</script>
+
+  <!-- 标记事件 -->
+  <script>
+    var hintEl = document.getElementById("uiHint");
+    function bindMarker() {
+      var m = document.querySelector("a-marker");
+      if (!m) { setTimeout(bindMarker, 500); return; }
+      m.addEventListener("markerFound", function() {
         hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
         hintEl.style.color = "#4ade80";
       });
-
-      marker.addEventListener("markerLost", () => {
+      m.addEventListener("markerLost", function() {
         hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
         hintEl.style.color = "#fff";
       });
-    });
+    }
+    var sceneEl = document.querySelector("a-scene");
+    if (sceneEl) {
+      sceneEl.addEventListener("loaded", bindMarker);
+    }
   </script>
 
 </body>
