@@ -5,33 +5,37 @@
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
   <title>Web AR — OC 立绘卡片</title>
 
-  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
+  <script>
+    // 调试日志
+    window._log = [];
+    function log(s) { window._log.push(Date.now() + ": " + s); var el=document.getElementById("debugLog");if(el)el.textContent=window._log.slice(-5).join("\n"); }
+    log("页面开始加载");
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"
+          onload="log('A-Frame 加载成功 v'+AFRAME.version)" onerror="log('A-Frame 加载失败!')"></script>
+  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"
+          onload="log('AR.js 加载成功')" onerror="log('AR.js 加载失败!')"></script>
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
-
-    /* A-Frame 场景必须撑满 */
     a-scene{display:block;width:100%!important;height:100%!important;position:fixed;top:0;left:0}
-
-    .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    .ui-overlay{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
-    .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:28px;font-size:15px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.35)}
-
-    .bottom-bar{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;align-items:center;gap:10px}
-    .upload-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;border:1.5px solid rgba(255,255,255,.35);padding:10px 20px;border-radius:24px;font-size:14px;cursor:pointer;transition:all .25s}
+    #debugLog{position:fixed;top:10px;left:10px;z-index:10000;color:#0f0;font-size:11px;font-family:monospace;white-space:pre;background:rgba(0,0,0,.8);padding:8px;border-radius:4px;max-width:90vw;pointer-events:none}
+    .ui-overlay{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
+    .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;text-align:center}
+    .bottom-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .upload-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;border:1.5px solid rgba(255,255,255,.35);padding:8px 18px;border-radius:22px;font-size:13px;cursor:pointer}
     .upload-btn.uploaded{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.5);color:#4ade80}
-    .upload-btn .icon{font-size:18px}
+    .upload-btn .icon{font-size:16px}
     #fileInput{display:none}
-
-    .hiro-preview{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;padding:8px 14px;color:#fff;font-size:12px;box-shadow:0 2px 12px rgba(0,0,0,.3)}
-    .hiro-preview img{width:56px;height:56px;border-radius:6px;background:#fff;padding:2px}
+    .hiro-preview{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:12px;padding:6px 12px;color:#fff;font-size:11px}
+    .hiro-preview img{width:48px;height:48px;border-radius:4px;background:#fff;padding:2px}
   </style>
 </head>
 <body>
+
+  <div id="debugLog">初始化中...</div>
 
   <div class="ui-overlay">
     <div class="ui-card" id="uiHint">
@@ -47,7 +51,7 @@
     <div class="hiro-preview">
       <img src="https://cdn.jsdelivr.net/gh/nicolocarpignoli/nicolocarpignoli.github.io@master/ar-playground/assets/HIRO.jpg"
            alt="Hiro 标记" onerror="this.style.display='none'" />
-      <span>← Hiro 标记<br>打印或另台手机显示</span>
+      <span>← Hiro 标记</span>
     </div>
   </div>
 
@@ -57,43 +61,45 @@
     vr-mode-ui="enabled: false">
 
     <a-marker preset="hiro">
-      <!-- 底座阴影 -->
       <a-plane position="0 0.005 0" rotation="-90 0 0" width="0.7" height="0.25"
                material="color: #000; opacity: 0.3; side: double;"></a-plane>
-      <!-- 卡片背面 -->
       <a-plane position="0 0.4 -0.015" width="0.6" height="0.85"
                material="color: #1a1a2e; side: double;"></a-plane>
-      <!-- 卡片主体 -->
       <a-plane id="cardImage" position="0 0.4 0" width="0.6" height="0.85"
                material="src: https://picsum.photos/id/237/400/566; side: double;"></a-plane>
-      <!-- 金色边框 -->
       <a-plane position="0 0.4 0.005" width="0.62" height="0.87"
                material="color: #c9a96e; opacity: 0.4; side: double;"></a-plane>
-      <!-- 底座 -->
       <a-box position="0 0.03 0.12" width="0.56" height="0.06" depth="0.04"
              material="color: #c9a96e;"></a-box>
     </a-marker>
-
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
+    log("DOM 就绪");
     var hintEl = document.getElementById("uiHint");
     var sceneEl = document.querySelector("a-scene");
 
-    sceneEl.addEventListener("loaded", function() {
-      var m = document.querySelector("a-marker");
-      if (m) {
-        m.addEventListener("markerFound", function() {
-          hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
-          hintEl.style.color = "#4ade80";
-        });
-        m.addEventListener("markerLost", function() {
-          hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
-          hintEl.style.color = "#fff";
-        });
-      }
-    });
+    if (sceneEl) {
+      log("找到 a-scene");
+      sceneEl.addEventListener("loaded", function() {
+        log("场景加载完成!");
+        var m = document.querySelector("a-marker");
+        if (m) {
+          log("找到 a-marker，绑定事件");
+          m.addEventListener("markerFound", function() {
+            hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
+            hintEl.style.color = "#4ade80";
+          });
+          m.addEventListener("markerLost", function() {
+            hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
+            hintEl.style.color = "#fff";
+          });
+        } else { log("未找到 a-marker!"); }
+      });
+    } else {
+      log("未找到 a-scene!");
+    }
 
     // 图片上传
     var fileInput = document.getElementById("fileInput");
@@ -109,7 +115,17 @@
       cardImage.setAttribute("material", "src: " + currentBlobUrl + "; side: double;");
       uploadBtn.classList.add("uploaded");
       uploadBtn.innerHTML = '<span class="icon">✅</span> 已上传立绘（点击更换）';
+      log("图片已上传");
     });
+
+    // 10秒后如果场景还没加载，显示诊断
+    setTimeout(function() {
+      if (typeof AFRAME === "undefined") {
+        log("错误: A-Frame 未定义");
+      } else if (!document.querySelector("a-scene") || !document.querySelector("a-scene").hasLoaded) {
+        log("警告: 场景未在10秒内加载");
+      }
+    }, 10000);
   </script>
 
 </body>
