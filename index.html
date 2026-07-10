@@ -15,7 +15,6 @@
 </head>
 <body>
 
-  <!-- A-Frame 和 AR.js 必须在最前面 -->
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
 
@@ -27,11 +26,11 @@
     <span style="font-size:11px;color:rgba(255,255,255,.5)">← 打印或用另一台手机显示标记</span>
   </div>
 
-  <!-- 不用 embedded，不用 fixed，让 A-Frame 自然全屏 -->
+  <!-- 最简 a-scene：只保留核心 arjs 属性 -->
   <a-scene
     arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    renderer="logarithmicDepthBuffer: true; preserveDrawingBuffer: true;"
-    vr-mode-ui="enabled: false">
+    vr-mode-ui="enabled: false"
+    embedded>
 
     <a-marker preset="hiro">
       <a-plane position="0 0.005 0" rotation="-90 0 0" width="0.7" height="0.25"
