@@ -15,7 +15,9 @@
 </head>
 <body>
 
-  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"></script>
+  <!-- A-Frame v1.2.0: jsdelivr npm 官方包 -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.2.0/dist/aframe.min.js"></script>
+  <!-- AR.js v2.0.8: 仓库本地文件 -->
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
 
   <div id="info">📷 对准 Hiro 标记</div>
@@ -26,7 +28,6 @@
     <span style="font-size:11px;color:rgba(255,255,255,.5)">← 打印或用另一台手机显示标记</span>
   </div>
 
-  <!-- 最简 a-scene：只保留核心 arjs 属性 -->
   <a-scene
     arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
