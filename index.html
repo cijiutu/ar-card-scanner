@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
   <title>Web AR — OC 立绘卡片</title>
 
+  <!-- 核心库：本地文件，无需 CDN -->
+  <script src="aframe.min.js"></script>
+  <script src="aframe-ar.js"></script>
+
   <style>
     html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
     #loading{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
@@ -14,36 +18,30 @@
     #loading .status{font-size:15px;margin:0 0 4px}
     #loading .sub{font-size:12px;opacity:.5;margin:0}
 
-    /* 顶部提示 */
     .ui-overlay{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
     .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:28px;font-size:15px;letter-spacing:.5px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.35)}
     .ui-card .emoji{font-size:22px;display:block;margin-bottom:2px}
 
-    /* 底部工具栏 */
     .bottom-bar{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;align-items:center;gap:10px}
 
-    /* 上传按钮 */
     .upload-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;border:1.5px solid rgba(255,255,255,.35);padding:10px 20px;border-radius:24px;font-size:14px;cursor:pointer;transition:all .25s}
     .upload-btn:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5)}
     .upload-btn.uploaded{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.5);color:#4ade80}
     .upload-btn .icon{font-size:18px}
     #fileInput{display:none}
 
-    /* Hiro 预览 */
     .hiro-preview{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;padding:8px 14px;color:#fff;font-size:12px;box-shadow:0 2px 12px rgba(0,0,0,.3)}
     .hiro-preview img{width:56px;height:56px;border-radius:6px;background:#fff;padding:2px}
   </style>
 </head>
 <body>
 
-  <!-- 加载指示器 -->
   <div id="loading">
     <div class="spinner"></div>
-    <p class="status">正在加载 AR 引擎...</p>
-    <p class="sub">首次打开可能需要几秒</p>
+    <p class="status">正在启动 AR 引擎...</p>
+    <p class="sub">请允许摄像头权限</p>
   </div>
 
-  <!-- 顶部提示 -->
   <div class="ui-overlay">
     <div class="ui-card" id="uiHint">
       <span class="emoji">📷</span>
@@ -51,15 +49,12 @@
     </div>
   </div>
 
-  <!-- 底部工具栏 -->
   <div class="bottom-bar">
-    <!-- 上传按钮 -->
     <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">
       <span class="icon">🖼️</span> 上传 OC 立绘
     </button>
     <input type="file" id="fileInput" accept="image/*" />
 
-    <!-- Hiro 标记预览 -->
     <div class="hiro-preview">
       <img src="https://cdn.jsdelivr.net/gh/nicolocarpignoli/nicolocarpignoli.github.io@master/ar-playground/assets/HIRO.jpg"
            alt="Hiro 标记" onerror="this.style.display='none'" />
@@ -67,7 +62,6 @@
     </div>
   </div>
 
-  <!-- A-Frame 场景 -->
   <a-scene
     embedded
     arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
@@ -83,71 +77,46 @@
   </a-scene>
 
   <script>
+    // 加载完成
     var loadingEl = document.getElementById("loading");
-    function hideLoading() { loadingEl.classList.add("hidden"); setTimeout(function(){ loadingEl.style.display="none"; },600); }
-    function showError(m) { loadingEl.innerHTML='<div style="font-size:48px;margin-bottom:12px;">⚠️</div><p class="status">'+m+'</p><p class="sub">请检查网络连接</p><button onclick="location.reload()" style="margin-top:16px;padding:10px 28px;border:1px solid #fff;background:transparent;color:#fff;border-radius:20px;font-size:14px;cursor:pointer;">🔄 重试</button>'; }
-    var scriptsTotal=2, scriptsOk=0;
-    function onScriptOk(){ scriptsOk++; if(scriptsOk>=scriptsTotal) setTimeout(hideLoading,800); }
+    var sceneEl = document.querySelector("a-scene");
+    if (sceneEl) {
+      sceneEl.addEventListener("loaded", function() {
+        setTimeout(function() {
+          loadingEl.classList.add("hidden");
+          setTimeout(function() { loadingEl.style.display = "none"; }, 600);
+        }, 500);
+        bindMarker();
+      });
+    }
+    // 5秒兜底
+    setTimeout(function() {
+      if (!loadingEl.classList.contains("hidden")) {
+        loadingEl.classList.add("hidden");
+        setTimeout(function() { loadingEl.style.display = "none"; }, 600);
+      }
+    }, 5000);
   </script>
-
-  <!-- A-Frame: 多 CDN 回退 -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"
-          onerror="var s=document.createElement('script');s.src='https://unpkg.com/aframe@1.5.0/dist/aframe.min.js';s.onload=onScriptOk;s.onerror=function(){showError('A-Frame 加载失败')};document.head.appendChild(s)"
-          onload="onScriptOk()"></script>
-
-  <!-- AR.js: 多 CDN 回退 -->
-  <script>
-    (function loadArjs(urls, idx) {
-      if (idx >= urls.length) { showError("AR.js 加载失败，请检查网络"); return; }
-      var s = document.createElement("script");
-      s.src = urls[idx];
-      s.onload = onScriptOk;
-      s.onerror = function() { loadArjs(urls, idx + 1); };
-      document.head.appendChild(s);
-    })([
-      "https://cdn.jsdelivr.net/npm/ar.js@2.2.2/aframe/build/aframe-ar.js",
-      "https://unpkg.com/ar.js@2.2.2/aframe/build/aframe-ar.js",
-      "https://rawcdn.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"
-    ], 0);
-  </script>
-
-  <!-- 8秒兜底 -->
-  <script>setTimeout(function(){ if(typeof AFRAME!=="undefined") hideLoading(); }, 8000);</script>
 
   <!-- 图片上传 -->
   <script>
     var fileInput = document.getElementById("fileInput");
     var uploadBtn = document.getElementById("uploadBtn");
     var cardImage = document.getElementById("cardImage");
-    var defaultSrc = "https://picsum.photos/id/237/400/566";
     var currentBlobUrl = null;
 
     fileInput.addEventListener("change", function(e) {
       var file = e.target.files[0];
       if (!file) return;
-
-      // 验证图片类型
       if (!file.type.startsWith("image/")) {
         alert("请选择图片文件（JPG / PNG / WebP）");
         return;
       }
-
-      // 释放之前的 blob URL
       if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-
-      // 创建本地 URL
       currentBlobUrl = URL.createObjectURL(file);
-
-      // 更新卡片图片
       cardImage.setAttribute("material", "src: " + currentBlobUrl + "; side: double;");
-
-      // 更新按钮状态
       uploadBtn.classList.add("uploaded");
       uploadBtn.innerHTML = '<span class="icon">✅</span> 已上传立绘（点击更换）';
-
-      // 提示
-      var hintEl = document.getElementById("uiHint");
-      hintEl.innerHTML = '<span class="emoji">📷</span>已载入立绘，对准 <strong>Hiro 标记</strong>';
     });
   </script>
 
@@ -165,10 +134,6 @@
         hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
         hintEl.style.color = "#fff";
       });
-    }
-    var sceneEl = document.querySelector("a-scene");
-    if (sceneEl) {
-      sceneEl.addEventListener("loaded", bindMarker);
     }
   </script>
 
