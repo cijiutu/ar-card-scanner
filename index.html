@@ -1,77 +1,45 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Web AR — OC 立绘卡片</title>
-
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
+  <title>AR Card</title>
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
-
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
-    a-scene{display:block;width:100%!important;height:100%!important;position:fixed;top:0;left:0}
-
-    /* 权限引导按钮（叠在场景上方） */
-    #startOverlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px}
-    #startOverlay h3{font-size:20px;margin:0 0 12px}
-    #startOverlay p{font-size:14px;opacity:.7;max-width:280px;line-height:1.6;margin:4px 0}
-    #startOverlay .btn-start{display:inline-block;margin-top:20px;padding:14px 36px;background:#4ade80;color:#000;border:none;border-radius:26px;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,.4)}
-    #startOverlay .btn-start:active{transform:scale(.96)}
-
-    .ui-overlay{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
-    .ui-card{background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;text-align:center}
-    .bottom-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px}
-    .upload-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;border:1.5px solid rgba(255,255,255,.35);padding:8px 18px;border-radius:22px;font-size:13px;cursor:pointer}
-    .upload-btn.uploaded{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.5);color:#4ade80}
-    .upload-btn .icon{font-size:16px}
-    #fileInput{display:none}
-    .hiro-preview{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:12px;padding:6px 12px;color:#fff;font-size:11px}
-    .hiro-preview img{width:48px;height:48px;border-radius:4px;background:#fff;padding:2px}
+    body{margin:0;overflow:hidden;font-family:sans-serif}
+    #info{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.7);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;pointer-events:none}
+    #btns{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:10px;align-items:center}
+    #btns button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer}
+    #btns button.on{background:rgba(74,222,128,.25);border-color:#4ade80;color:#4ade80}
+    #fu{display:none}
   </style>
 </head>
 <body>
 
-  <!-- 开始引导——用户点击后才请求摄像头 -->
-  <div id="startOverlay">
-    <h3>📷 AR 立绘卡片</h3>
-    <p>点击下方按钮后将请求摄像头权限<br>请选择<strong>"允许"</strong></p>
-    <button class="btn-start" onclick="startAR()">🚀 开始体验</button>
-  </div>
+  <div id="info">📷 对准 Hiro 标记</div>
 
-  <div class="ui-overlay">
-    <div class="ui-card" id="uiHint">
-      <span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>
-    </div>
-  </div>
-
-  <div class="bottom-bar">
-    <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">
-      <span class="icon">🖼️</span> 上传 OC 立绘
-    </button>
-    <input type="file" id="fileInput" accept="image/*" />
-    <div class="hiro-preview">
-      <img src="https://cdn.jsdelivr.net/gh/nicolocarpignoli/nicolocarpignoli.github.io@master/ar-playground/assets/HIRO.jpg"
-           alt="Hiro 标记" onerror="this.style.display='none'" />
-      <span>← Hiro 标记</span>
-    </div>
+  <div id="btns">
+    <button id="upbtn" onclick="document.getElementById('fu').click()">🖼️ 上传立绘</button>
+    <input type="file" id="fu" accept="image/*" />
+    <span style="font-size:11px;color:rgba(255,255,255,.5)">← 打印或用另一台手机显示标记</span>
   </div>
 
   <a-scene
+    embedded
     arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     renderer="logarithmicDepthBuffer: true;"
     vr-mode-ui="enabled: false">
 
     <a-marker preset="hiro">
       <a-plane position="0 0.005 0" rotation="-90 0 0" width="0.7" height="0.25"
-               material="color: #000; opacity: 0.3; side: double;"></a-plane>
+               material="color: #000; opacity: 0.25;"></a-plane>
       <a-plane position="0 0.4 -0.015" width="0.6" height="0.85"
-               material="color: #1a1a2e; side: double;"></a-plane>
-      <a-plane id="cardImage" position="0 0.4 0" width="0.6" height="0.85"
-               material="src: https://picsum.photos/id/237/400/566; side: double;"></a-plane>
+               material="color: #1a1a2e;"></a-plane>
+      <a-plane id="card" position="0 0.4 0" width="0.6" height="0.85"
+               material="src: https://picsum.photos/id/237/400/566;"></a-plane>
       <a-plane position="0 0.4 0.005" width="0.62" height="0.87"
-               material="color: #c9a96e; opacity: 0.4; side: double;"></a-plane>
+               material="color: #c9a96e; opacity: 0.35;"></a-plane>
       <a-box position="0 0.03 0.12" width="0.56" height="0.06" depth="0.04"
              material="color: #c9a96e;"></a-box>
     </a-marker>
@@ -79,52 +47,34 @@
   </a-scene>
 
   <script>
-    var startOverlay = document.getElementById("startOverlay");
-    var hintEl = document.getElementById("uiHint");
+    var info = document.getElementById("info");
+    var upbtn = document.getElementById("upbtn");
+    var fu = document.getElementById("fu");
+    var card = document.getElementById("card");
+    var blobUrl = null;
 
-    // 用户点击按钮后才开始——触发摄像头权限弹窗
-    function startAR() {
-      startOverlay.style.display = "none";
-      // AR.js 会在场景加载后自动请求摄像头
-      // 此时用户已有点击手势，iOS Safari 会正常弹出权限
-      var sceneEl = document.querySelector("a-scene");
-      if (sceneEl && !sceneEl.hasLoaded) {
-        // 场景还没加载完,等待
-      }
-    }
-
-    // 场景加载完成后绑定事件
-    var sceneEl = document.querySelector("a-scene");
-    if (sceneEl) {
-      sceneEl.addEventListener("loaded", function() {
-        var m = document.querySelector("a-marker");
-        if (m) {
-          m.addEventListener("markerFound", function() {
-            hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
-            hintEl.style.color = "#4ade80";
-          });
-          m.addEventListener("markerLost", function() {
-            hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
-            hintEl.style.color = "#fff";
-          });
-        }
+    // 标记事件
+    var marker = document.querySelector("a-marker");
+    if (marker) {
+      marker.addEventListener("markerFound", function() {
+        info.innerHTML = "✅ 已识别 Hiro";
+        info.style.color = "#4ade80";
+      });
+      marker.addEventListener("markerLost", function() {
+        info.innerHTML = "📷 对准 Hiro 标记";
+        info.style.color = "#fff";
       });
     }
 
-    // 图片上传
-    var fileInput = document.getElementById("fileInput");
-    var uploadBtn = document.getElementById("uploadBtn");
-    var cardImage = document.getElementById("cardImage");
-    var currentBlobUrl = null;
-    fileInput.addEventListener("change", function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith("image/")) return;
-      if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-      currentBlobUrl = URL.createObjectURL(file);
-      cardImage.setAttribute("material", "src: " + currentBlobUrl + "; side: double;");
-      uploadBtn.classList.add("uploaded");
-      uploadBtn.innerHTML = '<span class="icon">✅</span> 已上传立绘（点击更换）';
+    // 上传
+    fu.addEventListener("change", function(e) {
+      var f = e.target.files[0];
+      if (!f || !f.type.startsWith("image/")) return;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      blobUrl = URL.createObjectURL(f);
+      card.setAttribute("material", "src: " + blobUrl);
+      upbtn.classList.add("on");
+      upbtn.textContent = "✅ 已更换立绘";
     });
   </script>
 
