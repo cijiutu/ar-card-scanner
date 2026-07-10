@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
+  <title>Web AR — Hiro 标记识别</title>
+
+  <!-- 1. A-Frame 核心 -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- 2. AR.js + A-Frame 适配组件 -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    /* ---------- 顶部提示 ---------- */
+    .ui-overlay {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    .ui-card {
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 28px;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transition: opacity 0.4s;
+    }
+
+    .ui-card .emoji {
+      font-size: 22px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* ---------- Hiro 标记预览图 ---------- */
+    .hiro-preview {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 13px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .hiro-preview img {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      background: #fff;
+      padding: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== UI 覆盖层 ==================== -->
+  <div class="ui-overlay">
+    <div class="ui-card" id="uiHint">
+      <span class="emoji">📷</span>
+      将摄像头对准 <strong>Hiro 标记</strong>
+    </div>
+  </div>
+
+  <!-- Hiro 标记预览（方便用户打印或手机展示） -->
+  <div class="hiro-preview">
+    <img src="https://raw.githack.com/nicolocarpignoli/nicolocarpignoli.github.io/master/ar-playground/assets/HIRO.jpg"
+         alt="Hiro 标记" />
+    <span>← 这是 Hiro 标记<br>打印出来或用另一台手机显示</span>
+  </div>
+
+  <!-- ==================== A-Frame 场景 ==================== -->
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+    <!-- ---------- Hiro 预置标记 ---------- -->
+    <a-marker preset="hiro">
+
+      <!-- 在标记上显示的图片平面 -->
+      <!-- 宽高比 1:√2 就像一张卡片 -->
+      <a-plane
+        position="0 0 0"
+        rotation="-90 0 0"
+        width="1"
+        height="1.414"
+        material="src: https://picsum.photos/id/237/400/566; side: double;">
+      </a-plane>
+
+      <!-- 可选：薄边框让「卡片感」更强 -->
+      <a-plane
+        position="0 0.002 0"
+        rotation="-90 0 0"
+        width="1.04"
+        height="1.454"
+        material="color: #fff; opacity: 0.18; side: double;">
+      </a-plane>
+
+    </a-marker>
+
+    <!-- ---------- 摄像机 ---------- -->
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <!-- ==================== 检测到/丢失标记时切换提示 ==================== -->
+  <script>
+    const hintEl = document.getElementById("uiHint");
+    const sceneEl = document.querySelector("a-scene");
+
+    sceneEl.addEventListener("loaded", () => {
+      const marker = document.querySelector("a-marker");
+
+      marker.addEventListener("markerFound", () => {
+        hintEl.innerHTML = '<span class="emoji">✅</span>已识别 Hiro 标记';
+        hintEl.style.color = "#4ade80";
+      });
+
+      marker.addEventListener("markerLost", () => {
+        hintEl.innerHTML = '<span class="emoji">📷</span>将摄像头对准 <strong>Hiro 标记</strong>';
+        hintEl.style.color = "#fff";
+      });
+    });
+  </script>
+
+</body>
+</html>
