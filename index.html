@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0" />
   <title>Web AR — OC 立绘卡片</title>
 
-  <!-- 核心库：本地文件，无需 CDN -->
-  <script src="aframe.min.js"></script>
-  <script src="aframe-ar.js"></script>
+  <!-- 从 jsdelivr CDN 加载（直连 GitHub 仓库，国内外可用） -->
+  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/cijiutu/ar-card-scanner@main/aframe-ar.js"></script>
 
   <style>
     html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;background:#000;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
@@ -39,7 +39,7 @@
   <div id="loading">
     <div class="spinner"></div>
     <p class="status">正在启动 AR 引擎...</p>
-    <p class="sub">请允许摄像头权限</p>
+    <p class="sub">首次加载约需 3-5 秒</p>
   </div>
 
   <div class="ui-overlay">
@@ -77,7 +77,6 @@
   </a-scene>
 
   <script>
-    // 加载完成
     var loadingEl = document.getElementById("loading");
     var sceneEl = document.querySelector("a-scene");
     if (sceneEl) {
@@ -89,29 +88,23 @@
         bindMarker();
       });
     }
-    // 5秒兜底
     setTimeout(function() {
       if (!loadingEl.classList.contains("hidden")) {
         loadingEl.classList.add("hidden");
         setTimeout(function() { loadingEl.style.display = "none"; }, 600);
       }
-    }, 5000);
+    }, 8000);
   </script>
 
-  <!-- 图片上传 -->
   <script>
     var fileInput = document.getElementById("fileInput");
     var uploadBtn = document.getElementById("uploadBtn");
     var cardImage = document.getElementById("cardImage");
     var currentBlobUrl = null;
-
     fileInput.addEventListener("change", function(e) {
       var file = e.target.files[0];
       if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        alert("请选择图片文件（JPG / PNG / WebP）");
-        return;
-      }
+      if (!file.type.startsWith("image/")) { alert("请选择图片文件（JPG / PNG / WebP）"); return; }
       if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
       currentBlobUrl = URL.createObjectURL(file);
       cardImage.setAttribute("material", "src: " + currentBlobUrl + "; side: double;");
@@ -120,7 +113,6 @@
     });
   </script>
 
-  <!-- 标记事件 -->
   <script>
     var hintEl = document.getElementById("uiHint");
     function bindMarker() {
